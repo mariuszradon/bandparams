@@ -1,31 +1,55 @@
 """Parameters of a band: max, barycenter, width etc
 
-Assumes that the band is unimodal (single maximum)
+It works for single bands. Works best for unimodal bands (single maximum),
+but may also work for bands having side maxima in addition to the main max.
+In such cases, max_pos and max_val refer to the global maximum.
+FWHM determination may need to be carefully checked in such cases.
 """
 
 import argparse
 import pandas as pd
 import numpy as np
 
-def bandparams(df):
-    max_pos = df.idxmax()['y']
-    max_val = df['y'][max_pos]
+def bandparams(df, colname=None):
+    """Calculate band parameters: maximum, barycenter and FWHM
+
+    Parameters:
+    -----------
+    df (pd.DataFrame): spectral band as dataframe indexed by energy.
+    
+    colname (str or None): identify the column containing the intensity;
+       default: name of the first column in df.
+
+    Returns:
+    --------
+    band parameters as dictionary with keys:
+    'barycenter', 
+    'max_pos' (position of the maximum), 
+    'max_val' (the maximum value),
+    'fwhm' (FwHM = full width at half maximum).
+
+    If there are several maxima, 'max_pos' and 'max_val' refer to the global maximum.
+    In such cases, one should be careful with the calculated FWHM.
+    """
+    yname = df.columns[0]
+    max_pos = df.idxmax()[yname]
+    max_val = df[yname][max_pos]
     barycenter = np.average(a=df.index, weights=df['y'])
     # FWHM
     hh = max_val / 2
+    xhh = []
     initialized = False
     for x,row in df.iterrows():
         y=row['y']
         if initialized:
             if prev_y < hh and y >= hh:
-                x1 = x + (hh - y) * (x - prev_x) / (y - prev_y)
+                xhh.append( x + (hh - y) * (x - prev_x) / (y - prev_y) )
             elif prev_y >= hh and y < hh:
-                x2 = x + (hh - y) * (x - prev_x) / (y - prev_y)
-                break
+                xhh.append( x + (hh - y) * (x - prev_x) / (y - prev_y) )
         prev_x = x
         prev_y = y
         initialized = True
-    fwhm = x2 - x1
+    fwhm = max(xhh) - min(xhh)
     return {
         'barycenter': barycenter,
         'max_pos': max_pos,
