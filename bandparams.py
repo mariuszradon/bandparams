@@ -37,9 +37,21 @@ def main():
     ap = argparse.ArgumentParser('bandparams')
     ap.add_argument('datafile', metavar='DATAFILE', type=argparse.FileType('rt'),
                         help="ASCII with a band data in table format (x y)")
-    ap.add_argument('--x-digits', '-x', metavar='M', type=int, default=2,
+    ap.add_argument('--barycenter', '-com', '-b', action='store_const',
+                        dest='only_print', const='barycenter',
+                        help='only print the barycenter')
+    ap.add_argument('--max_pos', '-x0', action='store_const',
+                        dest='only_print', const='max_pos',
+                        help='only print position of the maximum')
+    ap.add_argument('--max_val', '-y0', action='store_const',
+                        dest='only_print', const='max_val',
+                        help='only print maximum value')
+    ap.add_argument('--fhwm', '-w', action='store_const',
+                        dest='only_print', const='fwhm',
+                        help='only print FWHM')
+    ap.add_argument('--x-digits', metavar='M', type=int, default=2,
                         help='display abscissa variable (x) with M digits')
-    ap.add_argument('--y-digits', '-y', metavar='N', type=int, default=3,
+    ap.add_argument('--y-digits', metavar='N', type=int, default=3,
                         help='display ordinate variable (y) with N digits')
     
     args = ap.parse_args()
@@ -50,6 +62,9 @@ def main():
             digits = args.y_digits
         else:
             digits = args.x_digits
-        print(f"{k+':':12s} {round(bp[k],digits)}")
+        if args.only_print is None:
+            print(f"{k+':':12s} {round(bp[k],digits)}")
+        elif k == args.only_print:
+            print(f"{round(bp[k],digits)}")
 
         
