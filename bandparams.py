@@ -6,6 +6,13 @@ In such cases, max_pos and max_val refer to the global maximum.
 FWHM determination may need to be carefully checked in such cases.
 """
 
+from importlib.metadata import version, PackageNotFoundError
+try:
+    __version__ = version(__name__)
+except PackageNotFoundError:
+    # package is not installed
+    pass
+
 import argparse
 import pandas as pd
 import numpy as np
